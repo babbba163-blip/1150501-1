@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI放大鏡 x 就業服務</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;background:#f5f5f5;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:0}
+#shell{width:100%;max-width:480px;min-height:100vh;background:#f0f0f0;display:flex;flex-direction:column}
+#topbar{background:#fff;border-bottom:1px solid #e8e8e8;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+#topbar-av{width:38px;height:38px;border-radius:50%;background:#e6f1fb;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+#topbar-name{font-size:15px;font-weight:600;color:#1a1a1a}
+#topbar-sub{font-size:12px;color:#1d9e75}
+#chat{flex:1;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:4px}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row.bot{justify-content:flex-start}
+.row.user{justify-content:flex-end}
+.av{width:30px;height:30px;border-radius:50%;background:#e6f1fb;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.bbl{max-width:80%;padding:10px 14px;font-size:15px;line-height:1.6;word-break:break-word}
+.bbl.bot{background:#fff;border:1px solid #e8e8e8;border-radius:18px;border-bottom-left-radius:4px;color:#1a1a1a}
+.bbl.user{background:#0a84ff;color:#fff;border-radius:18px;border-bottom-right-radius:4px}
+.typing-bbl{background:#fff;border:1px solid #e8e8e8;border-radius:18px;border-bottom-left-radius:4px;padding:12px 16px;display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:#aaa;animation:pulse 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,60%,100%{opacity:.25}30%{opacity:1}}
+#opts-area{padding:12px 16px 24px;display:flex;flex-direction:column;gap:8px;background:#f0f0f0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:10px 16px;border:1.5px solid #d0d0d0;border-radius:22px;background:#fff;color:#1a1a1a;font-size:14px;cursor:pointer;font-family:inherit;min-height:42px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
+.chip:active{background:#f0f0f0}
+.chip.on{border-color:#1d9e75;background:#e1f5ee;color:#085041}
+.confirm{padding:12px 24px;border:none;border-radius:22px;background:#0a84ff;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;min-height:44px}
+.confirm:active{background:#007aef}
+.inp{width:100%;padding:12px 16px;border:1.5px solid #d0d0d0;border-radius:14px;font-size:15px;background:#fff;color:#1a1a1a;font-family:inherit}
+.inp:focus{outline:none;border-color:#0a84ff}
+.summary-box{background:#fff;border-radius:14px;padding:14px 16px;font-size:14px;line-height:2;border:1px solid #e8e8e8}
+.summary-box .lbl{color:#888;font-size:13px}
+.dl-btn{width:100%;padding:13px;border:none;border-radius:14px;background:#0a84ff;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px}
+.restart-btn{width:100%;padding:11px;border:1.5px solid #d0d0d0;border-radius:14px;background:#fff;color:#555;font-size:14px;cursor:pointer;font-family:inherit;margin-top:6px}
+.saving{text-align:center;font-size:13px;color:#888;padding:8px 0}
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="topbar">
+    <div id="topbar-av">🔍</div>
+    <div>
+      <div id="topbar-name">就業服務小幫手</div>
+      <div id="topbar-sub">線上服務中</div>
+    </div>
+  </div>
+  <div id="chat"></div>
+  <div id="opts-area"></div>
+</div>
+<script>
+// ★ 換成你的 Google Apps Script 網址 ★
+const GAS_URL = 'https://script.google.com/macros/s/你的部署ID/exec';
+
+const chatEl = document.getElementById('chat');
+const optsEl = document.getElementById('opts-area');
+const A = {};
+let multiSel = [];
+
+const LABOR = ['粗工','送貨/貨運','作業員','清潔人員','賣場補貨/理貨','其他'];
+const STATIC = ['行政人員','會計/文書','門市/櫃台','其他'];
+const SHIFTS = ['日班 08–17','早班 07–15','午晚班 15–23','夜班 23–07','都可以'];
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function scroll(){chatEl.lastElementChild&&chatEl.lastElementChild.scrollIntoView({behavior:'smooth',block:'end'})}
+function clearOpts(){optsEl.innerHTML='';multiSel=[]}
+
+function botMsg(txt,isHTML){
+  const row=document.createElement('div');row.className='row bot';
+  row.innerHTML=`<div class="av">🔍</div><div class="bbl bot" style="white-space:pre-wrap">${isHTML?txt:esc(txt)}</div>`;
+  chatEl.appendChild(row);scroll()
+}
+function userMsg(txt){
+  const row=document.createElement('div');row.className='row user';
+  row.innerHTML=`<div class="bbl user">${esc(txt)}</div>`;
+  chatEl.appendChild(row);scroll()
+}
+
+function think(cb){
+  clearOpts();
+  const row=document.createElement('div');row.className='row bot';row.id='typing';
+  row.innerHTML=`<div class="av">🔍</div><div class="typing-bbl"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  chatEl.appendChild(row);scroll();
+  setTimeout(()=>{const t=document.getElementById('typing');if(t)t.remove();cb()},800)
+}
+
+function chips(list,onPick,multi){
+  const wrap=document.createElement('div');wrap.className='chips';
+  list.forEach(o=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=o;
+    if(multi){
+      b.onclick=()=>{const i=multiSel.indexOf(o);if(i>=0){multiSel.splice(i,1);b.classList.remove('on')}else{multiSel.push(o);b.classList.add('on')}}
+    }else{
+      b.onclick=()=>{userMsg(o);clearOpts();think(()=>onPick(o))}
+    }
+    wrap.appendChild(b)
+  });
+  optsEl.appendChild(wrap);
+  if(multi){
+    const cb=document.createElement('button');cb.className='confirm';cb.textContent='確認 ✓';
+    cb.onclick=()=>{if(!multiSel.length)return;userMsg(multiSel.join('、'));clearOpts();const v=[...multiSel];think(()=>onPick(v))};
+    optsEl.appendChild(cb)
+  }
+}
+
+function saveToSheets(data){
+  optsEl.innerHTML='<div class="saving">⏳ 儲存中...</div>';
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify(data)})
+    .then(r=>r.json())
+    .then(r=>{
+      optsEl.innerHTML='<div class="saving">'+(r.status==='ok'?'✅ 已存入 Google Sheets':'⚠️ 儲存時發生問題')+'</div>'
+    })
+    .catch(()=>{optsEl.innerHTML='<div class="saving">⚠️ 網路問題，請確認連線</div>'})
+}
+
+function showSummary(){
+  const exp=A.expType==='還沒有工作經驗'?'潛力新秀（無工作經驗）':`${A.expType||''}${A.expJobs?' ('+A.expJobs.join('、')+')':''}`;
+  const wish=A.wish&&A.wish.includes('繼續')?`繼續 ${exp}`:`${A.wishType||''}${A.wishJobs?' ('+A.wishJobs.join('、')+')':''}`;
+  const rows=[['年齡',A.age],['居住地',A.town],['工作經驗',exp],['求職方向',wish],
+    ['可上班時段',(A.shifts||[]).join('、')],['體力狀況',A.physical],['通勤距離',A.distance],['後續方式',A.action]];
+  if(A.name)rows.push(['姓名',A.name]);
+  if(A.phone)rows.push(['聯絡電話',A.phone]);
+  if(A.callTime)rows.push(['聯絡時段',A.callTime]);
+  const inner=rows.map(r=>`<span class="lbl">${r[0]}</span>　${r[1]||'-'}<br>`).join('');
+  botMsg(`<div class="summary-box">${inner}</div>`,true);
+  setTimeout(()=>{
+    clearOpts();
+    const dl=document.createElement('button');dl.className='dl-btn';dl.textContent='📥 下載資料';
+    dl.onclick=()=>{
+      const blob=new Blob([JSON.stringify({...A,timestamp:new Date().toISOString()},null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');
+      a.href=url;a.download='就業服務_'+Date.now()+'.json';a.click();URL.revokeObjectURL(url)
+    };
+    const rs=document.createElement('button');rs.className='restart-btn';rs.textContent='🔄 重新開始';
+    rs.onclick=()=>{Object.keys(A).forEach(k=>delete A[k]);chatEl.innerHTML='';clearOpts();run()};
+    optsEl.appendChild(dl);optsEl.appendChild(rs);
+    saveToSheets({...A,timestamp:new Date().toISOString()})
+  },400)
+}
+
+function askShifts(){
+  botMsg('快完成了！\n可以上哪個時段的班？（可多選）');
+  chips(SHIFTS,v=>{
+    A.shifts=v;
+    botMsg('好的！體力狀況大概是？');
+    chips(['💪 可以搬重物','🤏 只能搬輕物','😌 希望站或坐著工作'],v=>{
+      A.physical=v.replace(/^.\s/,'');
+      botMsg('可以接受多遠的通勤距離？');
+      chips(['🏠 住家附近','📍 同鄉鎮','🚗 可跨鄉鎮'],v=>{
+        A.distance=v.replace(/^.\s/,'');
+        botMsg('太好了！資料都收集完成 🎉\n接下來您希望怎麼做？');
+        chips(['🏢 直接前往就業中心','📞 預約電話聯絡','📄 先儲存資料'],v=>{
+          A.action=v.replace(/^.\s/,'');
+          if(A.action.includes('電話')){
+            botMsg('請填入您的聯絡資料：');
+            const ni=document.createElement('input');ni.className='inp';ni.placeholder='姓名';ni.id='n-inp';optsEl.appendChild(ni);
+            const pi=document.createElement('input');pi.className='inp';pi.placeholder='聯絡電話';pi.id='p-inp';pi.type='tel';optsEl.appendChild(pi);
+            const tw=document.createElement('div');tw.className='chips';
+            ['早上 08–12','下午 13–17'].forEach(o=>{
+              const b=document.createElement('button');b.className='chip';b.textContent=o;
+              b.onclick=()=>{tw.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');A.callTime=o};
+              tw.appendChild(b)
+            });
+            optsEl.appendChild(tw);
+            const cb=document.createElement('button');cb.className='confirm';cb.textContent='送出 ✓';
+            cb.onclick=()=>{
+              const n=document.getElementById('n-inp').value.trim();
+              const p=document.getElementById('p-inp').value.trim();
+              if(!n||!p){alert('請填入姓名和電話');return}
+              A.name=n;A.phone=p;userMsg(`${n}｜${p}${A.callTime?' / '+A.callTime:''}`);
+              clearOpts();think(()=>showSummary())
+            };
+            optsEl.appendChild(cb)
+          }else{think(()=>showSummary())}
+        })
+      })
+    })
+  },true)
+}
+
+function run(){
+  botMsg('您好！我是就業服務小幫手 👋\n點幾下就能幫您找到合適的工作，約 1 分鐘完成！');
+  think(()=>{
+    botMsg('請問您的年齡？');
+    chips(['15歲以下','18–29歲','30–44歲','45–64歲','65歲以上'],v=>{
+      A.age=v;botMsg('謝謝！\n您目前住在雲林縣哪個地方？');
+      chips(['虎尾鎮','土庫鎮','北港鎮','元長鄉','麥寮鄉','台西鄉','褒忠鄉','四湖鄉','口湖鄉','斗六市','西螺鎮','其他地區'],v=>{
+        A.town=v;botMsg(`${v}，了解！\n您之前做過什麼類型的工作？`);
+        chips(['💪 勞力型（需要體力）','🪑 較靜態（辦公室/門市）','✨ 還沒有工作經驗'],v=>{
+          const clean=v.replace(/^.\s/,'');A.expType=clean;
+          if(clean==='還沒有工作經驗'){
+            botMsg('沒關係！您對哪一類工作比較有興趣？');
+            chips(['💪 勞力型','🪑 較靜態','🎓 專業技術型'],v=>{A.wishType=v.replace(/^.\s/,'');askShifts()})
+          }else{
+            botMsg(`您有「${clean}」的經驗！\n做過哪些工作呢？（可多選）`);
+            chips(clean.includes('勞力')?LABOR:STATIC,v=>{
+              A.expJobs=v;botMsg(`了解，很棒的經驗！\n接下來您比較想要？`);
+              chips(['🔄 繼續做類似的工作','🌟 想嘗試新的工作'],v=>{
+                A.wish=v.replace(/^.\s/,'');
+                if(A.wish.includes('新的')){
+                  botMsg('想嘗試哪一類？');
+                  chips(['💪 勞力型','🪑 較靜態','🎓 專業技術型'],v=>{
+                    A.wishType=v.replace(/^.\s/,'');
+                    if(!A.wishType.includes('專業')){
+                      botMsg('想試試哪些職類？（可多選）');
+                      chips(A.wishType.includes('勞力')?LABOR:STATIC,v=>{A.wishJobs=v;askShifts()},true)
+                    }else askShifts()
+                  })
+                }else askShifts()
+              })
+            },true)
+          }
+        })
+      })
+    })
+  })
+}
+run();
+</script>
+</body>
+</html>

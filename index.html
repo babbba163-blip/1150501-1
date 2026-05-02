@@ -104,7 +104,7 @@ function chips(list,onPick,multi){
   optsEl.appendChild(wrap);
   if(multi){
     const cb=document.createElement('button');cb.className='confirm';cb.textContent='確認 ✓';
-    cb.onclick=()=>{if(!multiSel.length)return;userMsg(multiSel.join('、'));clearOpts();const v=[...multiSel];think(()=>onPick(v))};
+    cb.onclick=()=>{if(!multiSel.length)return;userMsg(multiSel.join('、'));clearOpts();const v=[...multiSel];onPick(v)};
     optsEl.appendChild(cb)
   }
 }
@@ -228,7 +228,7 @@ function run(){
           }else{
             botMsg(`您有「${clean}」的經驗！\n做過哪些工作呢？（可多選）`);
             chips(clean.includes('勞力')?LABOR:STATIC,v=>{
-              A.expJobs = v;botMsg(`了解，很棒的經驗！\n接下來您比較想要？`);
+              A.expJobs = Array.isArray(v) ? v : [v];botMsg(`了解，很棒的經驗！\n接下來您比較想要？`);
               chips(['🔄 繼續做類似的工作','🌟 想嘗試新的工作'],v=>{
                 A.wish=v.replace(/^.\s/,'');
                 if(A.wish.includes('新的')){
@@ -237,7 +237,7 @@ function run(){
                     A.wishType=v.replace(/^.\s/,'');
                     if(!A.wishType.includes('專業')){
                       botMsg('想試試哪些職類？（可多選）');
-                      chips(A.wishType.includes('勞力')?LABOR:STATIC,v=>{A.wishJobs = v;askShifts()},true)
+                      chips(A.wishType.includes('勞力')?LABOR:STATIC,v=>{A.wishJobs = Array.isArray(v) ? v : [v];askShifts()},true)
                     }else askShifts()
                   })
                 }else askShifts()

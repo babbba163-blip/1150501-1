@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwuOeb8THgsRvH6uajUHqcSSlH4Xa-rosPbariZI8KjYi5Y7Aa0alfus9YZ4XjYpQdv9Q/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxwE7HCpSBo9U2P4IOE-LqyojErRgal2quW8tt88QnI-35ZvX10H_gBZ596aPvJLBAjpg/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -115,7 +115,7 @@ function saveToSheets(data){
   fetch(GAS_URL,{
     method:'POST',
     headers:{
-      "Content-Type":"application/json"
+      "Content-Type":"text/plain;charset=utf-8"
     },
     body:JSON.stringify(data)
   })

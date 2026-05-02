@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyxiiJ485VC5v3Zu9h0YchIKIw-V7Ex1ISMVAhWxMfrcO1ih6LP5XX1htsZTeC3sZoeag/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwuOeb8THgsRvH6uajUHqcSSlH4Xa-rosPbariZI8KjYi5Y7Aa0alfus9YZ4XjYpQdv9Q/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -111,12 +111,24 @@ function chips(list,onPick,multi){
 
 function saveToSheets(data){
   optsEl.innerHTML='<div class="saving">⏳ 儲存中...</div>';
-  fetch(GAS_URL,{method:'POST',body:JSON.stringify(data)})
-    .then(r=>r.json())
-    .then(r=>{
-      optsEl.innerHTML='<div class="saving">'+(r.status==='ok'?'✅ 已存入 Google Sheets':'⚠️ 儲存時發生問題')+'</div>'
-    })
-    .catch(()=>{optsEl.innerHTML='<div class="saving">⚠️ 網路問題，請確認連線</div>'})
+
+  fetch(GAS_URL,{
+    method:'POST',
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.json())
+  .then(r=>{
+    optsEl.innerHTML='<div class="saving">'+
+      (r.status==='success'?'✅ 已存入 Google Sheets':'⚠️ 儲存時發生問題')+
+      '</div>'
+  })
+  .catch(err=>{
+    console.error(err);
+    optsEl.innerHTML='<div class="saving">⚠️ 網路問題，請確認連線</div>'
+  })
 }
 
 function showSummary(){

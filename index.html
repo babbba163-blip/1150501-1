@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwPrOYwv50zghHP4FGTfj9LBlu8KlOW8vZtqMcOI6Yqwn5JtqHJRX86MhAAkeftVTWPXQ/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzY4BjtnkQK-uVTCCZFDOZ_t1f_dSRR8Odkxdq7lRrM2uzyGf89Cx1uDhAmIrwmXxLdiQ/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -109,27 +109,23 @@ function chips(list,onPick,multi){
   }
 }
 
-function doPost(e) {
-  try {
-    Logger.log(e);
+function saveToSheets(data){
+  optsEl.innerHTML='<div class="saving">⏳ 儲存中...</div>';
 
-    const raw = e?.postData?.contents || '{}';
-    Logger.log(raw);
-
-    const data = JSON.parse(raw);
-
-    const ss = SpreadsheetApp.openById('1Dk0iBMfYnghsOFqWVhdCAdX2-U-Dct8metfc6yEdUBU');
-    const sheet = ss.getSheetByName('answers');
-
-    sheet.appendRow([new Date(), data.age || 'TEST']);
-
-    return ContentService.createTextOutput("OK");
-
-  } catch (err) {
-    Logger.log(err);
-    return ContentService.createTextOutput(err.toString());
-  }
+  fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+  .then(() => {
+    optsEl.innerHTML='<div class="saving">✅ 已送出</div>';
+  })
+  .catch(err => {
+    console.error(err);
+    optsEl.innerHTML='<div class="saving">⚠️ 網路問題</div>';
+  });
 }
+
+  
   /*
   .then(()=>{
     // ⚠️ no-cors 拿不到回應，只能假設成功

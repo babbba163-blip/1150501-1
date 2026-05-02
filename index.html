@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwjVr3cfKs7jgegsRUKHzhsi0fJHZHU2bQ8As4mOnNiFG72olvJSWC871fgIHUd4rnjYg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyb_5QyZ-7cI2jQPeM5yuryEz2muH3mwe0icpp7fnx73tZrh_-6vVoWgIqMgic9_IQe8A/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -114,9 +114,6 @@ function saveToSheets(data){
 
   fetch(GAS_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
     body: JSON.stringify(data)
   })
   .then(res => res.text())
@@ -125,7 +122,7 @@ function saveToSheets(data){
     optsEl.innerHTML='<div class="saving">✅ 已送出</div>';
   })
   .catch(err => {
-    console.error(err);
+    console.error('錯誤:', err);
     optsEl.innerHTML='<div class="saving">⚠️ 網路問題</div>';
   });
 }

@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycby_S1yRLoIMvUUvX7fn3TOq6Q03boI6qOwfnuwPr2FVYpOkxGOUVJTKBFZV7Qa1HMIfuA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyzrLyJJNGjp7d7is4RFRpK_xpXvmMkzHs1wV5AMurorK2duPW4rv5XR3qcGk3-3Ts46A/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -109,24 +109,26 @@ function chips(list,onPick,multi){
   }
 }
 
-function saveToSheets(data){
-  optsEl.innerHTML='<div class="saving">⏳ 儲存中...</div>';
+function doPost(e) {
+  try {
+    const raw = e.postData ? e.postData.contents : "{}";
+    const data = JSON.parse(raw);
 
-fetch(GAS_URL, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(data)
-})
+    const ss = SpreadsheetApp.openById('1Dk0iBMfYnghsOFqWVhdCAdX2-U-Dct8metfc6yEdUBU');
+    const sheet = ss.getSheetByName('answers') || ss.insertSheet('answers');
 
-.then(r => r.text())
-.then(t => {
-  console.log("GAS回傳:", t);
-})
-.catch(err => {
-  console.error(err);
-});
+    sheet.appendRow([
+      new Date(),
+      data.age || "",
+      data.town || ""
+    ]);
+
+    return ContentService.createTextOutput("OK");
+
+  } catch (err) {
+    return ContentService.createTextOutput("ERROR: " + err);
+  }
+}
 
   /*
   .then(()=>{

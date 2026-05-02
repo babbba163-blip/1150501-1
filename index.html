@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwLw_hJffhyG_I3ShwWUPP3TzSZq12gVnSBLZIpRmzXLN_JCkkN769s309aIBozo0_vpg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbx53KyGqEultbGKlpS1tC-aS6hb1ClTwegKbAj1MavcN-jbskfoyupjJUG5SksKkmvljA/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -112,11 +112,13 @@ function chips(list,onPick,multi){
 function saveToSheets(data){
   optsEl.innerHTML='<div class="saving">⏳ 儲存中...</div>';
 
-  fetch(GAS_URL,{
-    method:'POST',
-    mode:'no-cors',   // ⭐⭐⭐ 關鍵
-    body:JSON.stringify(data)
-  })
+  fetch(GAS_URL, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(data)
+})
   .then(()=>{
     // ⚠️ no-cors 拿不到回應，只能假設成功
     optsEl.innerHTML='<div class="saving">✅ 已送出（背景寫入中）</div>'

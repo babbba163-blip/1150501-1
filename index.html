@@ -54,7 +54,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;back
 </div>
 <script>
 // ★ 換成你的 Google Apps Script 網址 ★
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxwE7HCpSBo9U2P4IOE-LqyojErRgal2quW8tt88QnI-35ZvX10H_gBZ596aPvJLBAjpg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyGyUibn68WN6suTgJQ3wm9jaYnGbfDArVtrOxHBAwQLFTxwflF-YNltD1neKYeJayvdQ/exec';
 
 const chatEl = document.getElementById('chat');
 const optsEl = document.getElementById('opts-area');
@@ -114,20 +114,16 @@ function saveToSheets(data){
 
   fetch(GAS_URL,{
     method:'POST',
-    headers:{
-      "Content-Type":"text/plain;charset=utf-8"
-    },
+    mode:'no-cors',   // ⭐⭐⭐ 關鍵
     body:JSON.stringify(data)
   })
-  .then(r=>r.json())
-  .then(r=>{
-    optsEl.innerHTML='<div class="saving">'+
-      (r.status==='success'?'✅ 已存入 Google Sheets':'⚠️ 儲存時發生問題')+
-      '</div>'
+  .then(()=>{
+    // ⚠️ no-cors 拿不到回應，只能假設成功
+    optsEl.innerHTML='<div class="saving">✅ 已送出（背景寫入中）</div>'
   })
   .catch(err=>{
     console.error(err);
-    optsEl.innerHTML='<div class="saving">⚠️ 網路問題，請確認連線</div>'
+    optsEl.innerHTML='<div class="saving">⚠️ 網路問題</div>'
   })
 }
 

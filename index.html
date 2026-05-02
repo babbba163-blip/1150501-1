@@ -127,7 +127,18 @@ function saveToSheets(data){
   })
 }
 
+  
+function normalize(){
+  A.expJobs = [].concat(A.expJobs || []);
+  A.wishJobs = [].concat(A.wishJobs || []);
+  A.shifts = [].concat(A.shifts || []);
+}
+
+  
 function showSummary(){
+
+
+  
   const exp=A.expType==='還沒有工作經驗'?'潛力新秀（無工作經驗）':`${A.expType||''}${A.expJobs?' ('+A.expJobs.join('、')+')':''}`;
   const wish=A.wish&&A.wish.includes('繼續')?`繼續 ${exp}`:`${A.wishType||''}${A.wishJobs?' ('+A.wishJobs.join('、')+')':''}`;
   const rows=[['年齡',A.age],['居住地',A.town],['工作經驗',exp],['求職方向',wish],
@@ -182,7 +193,16 @@ function askShifts(){
               const p=document.getElementById('p-inp').value.trim();
               if(!n||!p){alert('請填入姓名和電話');return}
               A.name=n;A.phone=p;userMsg(`${n}｜${p}${A.callTime?' / '+A.callTime:''}`);
-              clearOpts();think(()=>showSummary())
+              clearOpts();
+              
+              think(()=>{
+  normalize();
+  showSummary();
+})
+              //think(()=>showSummary())
+
+
+              
             };
             optsEl.appendChild(cb)
           }else{think(()=>showSummary())}
@@ -208,7 +228,7 @@ function run(){
           }else{
             botMsg(`您有「${clean}」的經驗！\n做過哪些工作呢？（可多選）`);
             chips(clean.includes('勞力')?LABOR:STATIC,v=>{
-              A.expJobs = Array.isArray(v) ? v : [v];botMsg(`了解，很棒的經驗！\n接下來您比較想要？`);
+              A.expJobs = v;botMsg(`了解，很棒的經驗！\n接下來您比較想要？`);
               chips(['🔄 繼續做類似的工作','🌟 想嘗試新的工作'],v=>{
                 A.wish=v.replace(/^.\s/,'');
                 if(A.wish.includes('新的')){
@@ -217,7 +237,7 @@ function run(){
                     A.wishType=v.replace(/^.\s/,'');
                     if(!A.wishType.includes('專業')){
                       botMsg('想試試哪些職類？（可多選）');
-                      chips(A.wishType.includes('勞力')?LABOR:STATIC,v=>{A.wishJobs = Array.isArray(v) ? v : [v];askShifts()},true)
+                      chips(A.wishType.includes('勞力')?LABOR:STATIC,v=>{A.wishJobs = v;askShifts()},true)
                     }else askShifts()
                   })
                 }else askShifts()

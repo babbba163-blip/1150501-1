@@ -66,18 +66,6 @@ const STATIC = ['行政人員','會計/文書','門市/櫃台','其他'];
 const SHIFTS = ['日班 08–17','早班 07–15','午晚班 15–23','夜班 23–07','都可以'];
 
 
-function testSend() {
-  fetch("https://script.google.com/macros/s/AKfycbyxiiJ485VC5v3Zu9h0YchIKIw-V7Ex1ISMVAhWxMfrcO1ih6LP5XX1htsZTeC3sZoeag/exec", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ test: "hello" })
-  })
-  .then(res => res.text())
-  .then(res => console.log(res));
-}
-
   
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
 function scroll(){chatEl.lastElementChild&&chatEl.lastElementChild.scrollIntoView({behavior:'smooth',block:'end'})}

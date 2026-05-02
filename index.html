@@ -111,25 +111,25 @@ function chips(list,onPick,multi){
 
 function doPost(e) {
   try {
-    const raw = e.postData ? e.postData.contents : "{}";
+    Logger.log(e);
+
+    const raw = e?.postData?.contents || '{}';
+    Logger.log(raw);
+
     const data = JSON.parse(raw);
 
     const ss = SpreadsheetApp.openById('1Dk0iBMfYnghsOFqWVhdCAdX2-U-Dct8metfc6yEdUBU');
-    const sheet = ss.getSheetByName('answers') || ss.insertSheet('answers');
+    const sheet = ss.getSheetByName('answers');
 
-    sheet.appendRow([
-      new Date(),
-      data.age || "",
-      data.town || ""
-    ]);
+    sheet.appendRow([new Date(), data.age || 'TEST']);
 
     return ContentService.createTextOutput("OK");
 
   } catch (err) {
-    return ContentService.createTextOutput("ERROR: " + err);
+    Logger.log(err);
+    return ContentService.createTextOutput(err.toString());
   }
 }
-
   /*
   .then(()=>{
     // ⚠️ no-cors 拿不到回應，只能假設成功
